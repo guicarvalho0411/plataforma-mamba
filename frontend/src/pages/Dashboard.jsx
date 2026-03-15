@@ -5,79 +5,115 @@ import api from '../services/api';
 export default function Dashboard() {
   const [escalaHoje, setEscalaHoje] = useState([]);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const hora = new Date().getHours();
+  const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
 
   useEffect(() => {
     api.get('/schedules/hoje').then(r => setEscalaHoje(r.data)).catch(() => {});
   }, []);
 
-  const hora = new Date().getHours();
-  const saudacao = hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
-
   return (
     <Layout>
-      <div style={s.topbar}>
+      {/* Header */}
+      <div style={s.header}>
         <div>
-          <h1 style={s.titulo}>{saudacao}, {user.name} 👋</h1>
-          <p style={s.sub}>{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+          <p style={s.saudacaoLabel}>{saudacao} 👋</p>
+          <h1 style={s.titulo}>{user.name}</h1>
+          <p style={s.data}>{new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+        </div>
+        <div style={s.headerBadge}>
+          <div style={s.badgeDot} />
+          Sistema online
         </div>
       </div>
 
+      {/* Cards */}
       <div style={s.cards}>
-        <StatCard icon="🎫" label="Chamados" desc="Solicitações internas" cor="#1E0A3C" href="/chamados" />
-        <StatCard icon="⬡" label="Salas de Reunião" desc="Agendar espaços" cor="#5B2D8E" href="/salas" />
-        <StatCard icon="◈" label="Escala" desc="Equipe de limpeza" cor="#F5C000" href="/escala" textCor="#1E0A3C" />
+        <ModuleCard icon="◎" label="Chamados" desc="Solicitações internas abertas" cor="#7C3AED" href="/chamados" />
+        <ModuleCard icon="⬡" label="Salas de Reunião" desc="Agende espaços disponíveis" cor="#0EA5E9" href="/salas" />
+        <ModuleCard icon="◈" label="Escala" desc="Equipe de limpeza da semana" cor="#F5C000" textCor="#1E0A3C" href="/escala" />
       </div>
 
+      {/* Escala hoje */}
       <div style={s.section}>
         <div style={s.sectionHeader}>
-          <span style={s.sectionIcon}>◈</span>
-          <h2 style={s.sectionTitulo}>Equipe de limpeza hoje</h2>
+          <div style={s.sectionIconBox}>◈</div>
+          <div>
+            <h2 style={s.sectionTitulo}>Equipe de limpeza hoje</h2>
+            <p style={s.sectionSub}>{new Date().toLocaleDateString('pt-BR', { weekday: 'long' })}</p>
+          </div>
         </div>
-        {escalaHoje.length === 0
-          ? <p style={s.vazio}>Nenhuma colaboradora escalada hoje.</p>
-          : escalaHoje.map((e, i) => (
-            <div key={i} style={s.escalaItem}>
-              <div style={s.escalaAvatar}>{e.colaboradora?.[0]}</div>
-              <div style={s.escalaInfo}>
-                <span style={s.escalaNome}>{e.colaboradora}</span>
-                <span style={s.escalaArea}>{e.area || e.default_area}</span>
+
+        {escalaHoje.length === 0 ? (
+          <div style={s.vazio}>
+            <div style={s.vazioBig}>◈</div>
+            <p style={s.vazioText}>Nenhuma colaboradora escalada hoje</p>
+          </div>
+        ) : (
+          <div style={s.escalaList}>
+            {escalaHoje.map((e, i) => (
+              <div key={i} style={s.escalaItem}>
+                <div style={s.escalaAvatar}>{e.colaboradora?.[0]}</div>
+                <div style={s.escalaInfo}>
+                  <span style={s.escalaNome}>{e.colaboradora}</span>
+                  <span style={s.escalaArea}>{e.area || e.default_area}</span>
+                </div>
+                <div style={s.escalaTurnoBox}>
+                  <span style={s.escalaTurno}>{e.shift_start?.slice(0,5)} — {e.shift_end?.slice(0,5)}</span>
+                </div>
               </div>
-              <span style={s.escalaTurno}>{e.shift_start?.slice(0,5)} — {e.shift_end?.slice(0,5)}</span>
-            </div>
-          ))
-        }
+            ))}
+          </div>
+        )}
       </div>
     </Layout>
   );
 }
 
-function StatCard({ icon, label, desc, cor, href, textCor = '#fff' }) {
+function ModuleCard({ icon, label, desc, cor, href, textCor = '#fff' }) {
+  const [hover, setHover] = useState(false);
   return (
-    <div style={{ ...s.card, background: cor }} onClick={() => window.location.href = href}>
-      <span style={{ fontSize: 28, marginBottom: 12, display: 'block' }}>{icon}</span>
-      <div style={{ ...s.cardLabel, color: textCor }}>{label}</div>
-      <div style={{ ...s.cardDesc, color: textCor === '#1E0A3C' ? 'rgba(30,10,60,0.55)' : 'rgba(255,255,255,0.6)' }}>{desc}</div>
+    <div
+      style={{ ...s.card, background: hover ? cor : `${cor}22`, border: `1px solid ${cor}44`, transform: hover ? 'translateY(-2px)' : 'none', transition: 'all 0.2s' }}
+      onClick={() => window.location.href = href}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      <div style={{ ...s.cardIconBox, background: `${cor}33`, color: hover ? '#fff' : cor }}>{icon}</div>
+      <div style={{ ...s.cardLabel, color: hover ? '#fff' : 'var(--text)' }}>{label}</div>
+      <div style={{ ...s.cardDesc, color: hover ? 'rgba(255,255,255,0.7)' : 'var(--text3)' }}>{desc}</div>
+      <div style={{ ...s.cardArrow, color: hover ? '#fff' : cor }}>→</div>
     </div>
   );
 }
 
 const s = {
-  topbar:       { marginBottom: 28 },
-  titulo:       { fontSize: 26, fontWeight: 700, color: '#1E0A3C', margin: '0 0 4px' },
-  sub:          { fontSize: 13, color: '#999', margin: 0, textTransform: 'capitalize' },
-  cards:        { display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 28 },
-  card:         { flex: '1 1 160px', borderRadius: 16, padding: '22px 20px', cursor: 'pointer', boxShadow: '0 4px 20px rgba(30,10,60,0.12)', transition: 'transform 0.15s' },
-  cardLabel:    { fontSize: 16, fontWeight: 700, marginBottom: 4 },
-  cardDesc:     { fontSize: 12 },
-  section:      { background: '#fff', borderRadius: 16, padding: '22px 24px', boxShadow: '0 2px 12px rgba(30,10,60,0.06)' },
-  sectionHeader:{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 },
-  sectionIcon:  { color: '#F5C000', fontSize: 18 },
-  sectionTitulo:{ fontSize: 15, fontWeight: 700, color: '#1E0A3C', margin: 0 },
-  vazio:        { color: '#bbb', fontSize: 14 },
-  escalaItem:   { display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: '1px solid #F4F1FA' },
-  escalaAvatar: { width: 34, height: 34, borderRadius: 8, background: '#F4F1FA', color: '#5B2D8E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 14, flexShrink: 0 },
-  escalaInfo:   { flex: 1, display: 'flex', flexDirection: 'column', gap: 2 },
-  escalaNome:   { fontSize: 13, fontWeight: 600, color: '#1E0A3C' },
-  escalaArea:   { fontSize: 11, color: '#999' },
-  escalaTurno:  { fontSize: 12, color: '#5B2D8E', fontWeight: 600 },
+  header:        { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 },
+  saudacaoLabel: { fontSize: 13, color: 'var(--text3)', marginBottom: 4 },
+  titulo:        { fontSize: 28, fontWeight: 700, color: 'var(--text)', margin: '0 0 4px' },
+  data:          { fontSize: 12, color: 'var(--text3)', textTransform: 'capitalize' },
+  headerBadge:   { display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 20, padding: '6px 14px', fontSize: 12, color: '#10B981' },
+  badgeDot:      { width: 6, height: 6, borderRadius: '50%', background: '#10B981' },
+  cards:         { display: 'flex', gap: 14, marginBottom: 28, flexWrap: 'wrap' },
+  card:          { flex: '1 1 160px', borderRadius: 16, padding: '20px', cursor: 'pointer', position: 'relative' },
+  cardIconBox:   { width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, marginBottom: 12 },
+  cardLabel:     { fontSize: 15, fontWeight: 600, marginBottom: 4 },
+  cardDesc:      { fontSize: 12, lineHeight: 1.4, marginBottom: 12 },
+  cardArrow:     { fontSize: 18, fontWeight: 300 },
+  section:       { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 20, padding: '24px' },
+  sectionHeader: { display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 },
+  sectionIconBox:{ width: 36, height: 36, borderRadius: 10, background: 'rgba(245,192,0,0.15)', color: '#F5C000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 },
+  sectionTitulo: { fontSize: 15, fontWeight: 600, color: 'var(--text)', margin: 0 },
+  sectionSub:    { fontSize: 11, color: 'var(--text3)', marginTop: 2, textTransform: 'capitalize' },
+  vazio:         { textAlign: 'center', padding: '32px 0' },
+  vazioBig:      { fontSize: 32, marginBottom: 8, opacity: 0.2 },
+  vazioText:     { fontSize: 13, color: 'var(--text3)' },
+  escalaList:    { display: 'flex', flexDirection: 'column', gap: 8 },
+  escalaItem:    { display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: 12, border: '1px solid var(--border)' },
+  escalaAvatar:  { width: 36, height: 36, borderRadius: 10, background: 'rgba(124,58,237,0.2)', color: 'var(--purple2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0 },
+  escalaInfo:    { flex: 1, display: 'flex', flexDirection: 'column', gap: 2 },
+  escalaNome:    { fontSize: 13, fontWeight: 600, color: 'var(--text)' },
+  escalaArea:    { fontSize: 11, color: 'var(--text3)' },
+  escalaTurnoBox:{ background: 'rgba(245,192,0,0.1)', border: '1px solid rgba(245,192,0,0.2)', borderRadius: 8, padding: '4px 10px' },
+  escalaTurno:   { fontSize: 11, color: 'var(--yellow)', fontWeight: 600 },
 };

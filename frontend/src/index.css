@@ -1,0 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0F0520;
+  --bg2:       #1A0835;
+  --bg3:       #220F42;
+  --card:      #1E0D3A;
+  --border:    rgba(255,255,255,0.07);
+  --purple:    #7C3AED;
+  --purple2:   #9D5CF6;
+  --yellow:    #F5C000;
+  --yellow2:   #FFD740;
+  --text:      #F0EBF8;
+  --text2:     #A89BC2;
+  --text3:     #6B5A80;
+  --success:   #10B981;
+  --danger:    #EF4444;
+  --warning:   #F59E0B;
+  --info:      #3B82F6;
+  --radius:    12px;
+  --radius-lg: 20px;
+  --shadow:    0 8px 40px rgba(0,0,0,0.4);
+  --shadow-sm: 0 2px 12px rgba(0,0,0,0.3);
+}
+
+body {
+  font-family: 'Sora', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--purple); border-radius: 2px; }
+
+input, select, textarea, button { font-family: 'Sora', sans-serif; }
+
+input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.7); }

@@ -1,12 +1,43 @@
 const pool = require('../db');
 
+// GET /api/rooms
 async function listarSalas(req, res) {
   try {
-    const { rows } = await pool.query('SELECT * FROM rooms WHERE active = true ORDER BY floor, name');
+    const { rows } = await pool.query('SELECT * FROM rooms ORDER BY floor, name');
     res.json(rows);
   } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
+// POST /api/rooms
+async function criarSala(req, res) {
+  const { name, floor, capacity, resources } = req.body;
+  if (!name || !floor || !capacity)
+    return res.status(400).json({ error: 'Nome, andar e capacidade são obrigatórios' });
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO rooms (name, floor, capacity, resources)
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [name, floor, capacity, resources || {}]
+    );
+    res.status(201).json(rows[0]);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+}
+
+// PUT /api/rooms/:id
+async function atualizarSala(req, res) {
+  const { id } = req.params;
+  const { name, floor, capacity, resources, active } = req.body;
+  try {
+    const { rows } = await pool.query(
+      `UPDATE rooms SET name=$1, floor=$2, capacity=$3, resources=$4, active=$5 WHERE id=$6 RETURNING *`,
+      [name, floor, capacity, resources || {}, active, id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Sala não encontrada' });
+    res.json(rows[0]);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+}
+
+// GET /api/rooms/bookings
 async function listarReservas(req, res) {
   const { date } = req.query;
   const dia = date || new Date().toISOString().split('T')[0];
@@ -24,6 +55,7 @@ async function listarReservas(req, res) {
   } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
+// POST /api/rooms/bookings
 async function criarReserva(req, res) {
   const { room_id, title, start_time, end_time } = req.body;
   if (!room_id || !start_time || !end_time)
@@ -41,17 +73,17 @@ async function criarReserva(req, res) {
   }
 }
 
+// PATCH /api/rooms/bookings/:id/status
 async function atualizarStatus(req, res) {
   const { id } = req.params;
   const { status } = req.body;
   try {
     const { rows } = await pool.query(
-      'UPDATE room_bookings SET status = $1 WHERE id = $2 RETURNING *',
-      [status, id]
+      'UPDATE room_bookings SET status=$1 WHERE id=$2 RETURNING *', [status, id]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Reserva não encontrada' });
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
-module.exports = { listarSalas, listarReservas, criarReserva, atualizarStatus };
+module.exports = { listarSalas, criarSala, atualizarSala, listarReservas, criarReserva, atualizarStatus };

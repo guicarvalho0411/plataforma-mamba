@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "Plataforma de Gestão de TI - Backend",
+  "description": "Plataforma de Gest\u00e3o de TI - Backend",
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
@@ -13,7 +13,8 @@
     "dotenv": "^16.4.5",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
-    "pg": "^8.11.3"
+    "pg": "^8.11.3",
+    "axios": "^1.6.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"
