@@ -39,14 +39,10 @@ async function criar(req, res) {
       [category_id, req.user.id, description, location || null, priority || 'media']
     );
     const ticket = rows[0];
-
-    // Busca nome da categoria para a mensagem
     const cat = await pool.query('SELECT name FROM ticket_categories WHERE id=$1', [category_id]);
     const catNome = cat.rows[0]?.name || 'Chamado';
     const icon = CATEGORIA_ICONS[catNome] || '📋';
     const prioLabel = priority === 'alta' ? '🔴 ALTA' : priority === 'baixa' ? '🟢 Baixa' : '🟡 Media';
-
-    // Notifica grupo WhatsApp
     const msg = [
       `${icon} *Novo chamado de limpeza!*`,
       ``,
@@ -56,7 +52,6 @@ async function criar(req, res) {
       `📝 *Descricao:* ${description}`,
       `👤 *Solicitado por:* ${req.user.name}`,
     ].join('\n');
-
     await notificarGrupoLimpeza(msg);
     res.status(201).json(ticket);
   } catch (err) { res.status(500).json({ error: err.message }); }
@@ -69,13 +64,19 @@ async function atualizarStatus(req, res) {
   if (!validos.includes(status))
     return res.status(400).json({ error: 'Status invalido' });
   try {
-    const { rows } = await pool.query(
-      `UPDATE tickets SET status=$1, assigned_to=$2,
-       started_at = CASE WHEN $1='em_andamento' THEN NOW() ELSE started_at END,
-       closed_at  = CASE WHEN $1='resolvido'    THEN NOW() ELSE NULL END
-       WHERE id=$3 RETURNING *`,
-      [status, req.user.id, id]
-    );
+    let query;
+    let params;
+    if (status === 'em_andamento') {
+      query = `UPDATE tickets SET status=$1, assigned_to=$2, started_at=NOW() WHERE id=$3 RETURNING *`;
+      params = [status, req.user.id, id];
+    } else if (status === 'resolvido') {
+      query = `UPDATE tickets SET status=$1, assigned_to=$2, closed_at=NOW() WHERE id=$3 RETURNING *`;
+      params = [status, req.user.id, id];
+    } else {
+      query = `UPDATE tickets SET status=$1 WHERE id=$2 RETURNING *`;
+      params = [status, id];
+    }
+    const { rows } = await pool.query(query, params);
     if (!rows[0]) return res.status(404).json({ error: 'Chamado nao encontrado' });
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
