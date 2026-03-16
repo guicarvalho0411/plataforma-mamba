@@ -44,9 +44,10 @@ export default function Chamados() {
   }
 
   async function excluir(id) {
+    // deleta de verdade
     if (!confirm('Excluir este chamado?')) return;
     try {
-      await api.patch(`/tickets/${id}/status`, { status: 'cancelado' });
+      await api.delete(`/tickets/${id}`);
       carregar();
     } catch (err) { alert('Erro ao excluir chamado'); }
   }
