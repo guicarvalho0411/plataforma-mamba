@@ -30,7 +30,7 @@ export default function Dashboard() {
       {/* Cards */}
       <div style={s.cards}>
         <ModuleCard icon="◎" label="Chamados" desc="Solicitações internas abertas" cor="#7C3AED" href="/chamados" />
-        <ModuleCard icon="⬡" label="Salas de Reunião" desc="Agende espaços disponíveis" cor="#0EA5E9" href="/salas" />
+        <ModuleCard icon="🤝" label="Reuniões Clientes" desc="Agendamentos com clientes" cor="#10B981" href="/reunioes-cliente" />
         <ModuleCard icon="◈" label="Escala" desc="Equipe de limpeza da semana" cor="#F5C000" textCor="#1E0A3C" href="/escala" />
       </div>
 
