@@ -17,5 +17,13 @@ app.use('/api/stock',          require('./routes/stock'));
 
 app.get('/', (req, res) => res.json({ status: 'Servidor rodando!' }));
 
+app.get('/whatsapp/qrcode', async (req, res) => {
+  const { getQRCodeImage, getStatus } = require('./services/whatsapp');
+  if (getStatus()) return res.send('<h2>✅ WhatsApp conectado!</h2>');
+  const img = await getQRCodeImage();
+  if (!img) return res.send('<h2>Aguardando QR Code... Atualize a página em alguns segundos.</h2>');
+  res.send(`<h2>Escaneie o QR Code com o WhatsApp</h2><img src="${img}" />`);
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
