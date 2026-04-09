@@ -117,6 +117,11 @@ export default function Chamados() {
 
               {/* Ações */}
               <div style={s.acoes}>
+                {t.status !== 'resolvido' && t.status !== 'cancelado' && (
+                  <button style={s.btnConcluir} onClick={() => atualizarStatus(t.id, 'resolvido')}>
+                    ✓ Resolvido
+                  </button>
+                )}
                 <button style={s.btnExcluir} onClick={() => excluir(t.id)}>
                   ✕
                 </button>
