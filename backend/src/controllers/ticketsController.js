@@ -44,7 +44,7 @@ async function criar(req, res) {
     const icon = CATEGORIA_ICONS[catNome] || '📋';
     const prioLabel = priority === 'alta' ? '🔴 ALTA' : priority === 'baixa' ? '🟢 Baixa' : '🟡 Media';
     const msg = [
-      `${icon} *Novo chamado de limpeza!*`,
+      `${icon} *Nova tarefa!*`,
       ``,
       `📍 *Local:* ${location || 'Nao informado'}`,
       `🏷 *Tipo:* ${catNome}`,
