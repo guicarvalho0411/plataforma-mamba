@@ -4,7 +4,7 @@ const menus = [
   { path:'/',                label:'Dashboard',         icon:'▦', desc:'Visão geral' },
   { path:'/chamados',        label:'Chamados',           icon:'◎', desc:'Equipe de limpeza' },
   { path:'/reunioes-cliente',label:'Reuniões Clientes',  icon:'🤝', desc:'Agendamentos' },
-  { path:'/salas',           label:'Salas de Reunião',   icon:'⬡', desc:'Reservas' },
+  { path:'/salas',           label:'Salas de Reunião',   icon:'⬡', desc:'Reservas', breve:true },
   { path:'/estoque',         label:'Estoque',            icon:'📦', desc:'Materiais de limpeza' },
   { path:'/escala',          label:'Escala',             icon:'◈', desc:'Equipe de limpeza' },
   { path:'/lugares',         label:'Lugares',            icon:'🗺', desc:'Em breve', breve:true },

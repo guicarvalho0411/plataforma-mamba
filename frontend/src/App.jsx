@@ -3,7 +3,6 @@ import Login          from './pages/Login';
 import Dashboard      from './pages/Dashboard';
 import Chamados       from './pages/Chamados';
 import ClientMeetings from './pages/ClientMeetings';
-import Salas          from './pages/Salas';
 import Estoque        from './pages/Estoque';
 import Escala         from './pages/Escala';
 import Lugares        from './pages/Lugares';
@@ -23,7 +22,7 @@ export default function App() {
         <Route path="/"                  element={<RotaProtegida><Dashboard /></RotaProtegida>} />
         <Route path="/chamados"          element={<RotaProtegida><Chamados /></RotaProtegida>} />
         <Route path="/reunioes-cliente"  element={<RotaProtegida><ClientMeetings /></RotaProtegida>} />
-        <Route path="/salas"             element={<RotaProtegida><Salas /></RotaProtegida>} />
+        <Route path="/salas"             element={<Navigate to="/" replace />} />
         <Route path="/estoque"           element={<RotaProtegida><Estoque /></RotaProtegida>} />
         <Route path="/escala"            element={<RotaProtegida><Escala /></RotaProtegida>} />
         <Route path="/lugares"           element={<RotaProtegida><Lugares /></RotaProtegida>} />
