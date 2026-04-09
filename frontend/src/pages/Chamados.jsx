@@ -115,23 +115,11 @@ export default function Chamados() {
                 </div>
               </div>
 
-              {/* Ações — disponíveis para todos */}
+              {/* Ações */}
               <div style={s.acoes}>
-                {t.status === 'aberto' && (
-                  <button style={s.btnIniciar} onClick={() => atualizarStatus(t.id, 'em_andamento')}>
-                    ▶ Iniciar
-                  </button>
-                )}
-                {t.status === 'em_andamento' && (
-                  <button style={s.btnConcluir} onClick={() => atualizarStatus(t.id, 'resolvido')}>
-                    ✓ Concluir
-                  </button>
-                )}
-                {t.status !== 'cancelado' && (
-                  <button style={s.btnExcluir} onClick={() => excluir(t.id)}>
-                    ✕
-                  </button>
-                )}
+                <button style={s.btnExcluir} onClick={() => excluir(t.id)}>
+                  ✕
+                </button>
               </div>
             </div>
           );
