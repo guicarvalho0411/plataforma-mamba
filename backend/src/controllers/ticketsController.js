@@ -97,6 +97,15 @@ async function avaliar(req, res) {
   } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
+async function excluir(req, res) {
+  const { id } = req.params;
+  try {
+    const { rows } = await pool.query('DELETE FROM tickets WHERE id=$1 RETURNING *', [id]);
+    if (!rows[0]) return res.status(404).json({ error: 'Chamado nao encontrado' });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+}
+
 async function categorias(req, res) {
   try {
     const { rows } = await pool.query('SELECT * FROM ticket_categories WHERE active=true ORDER BY name');
@@ -104,4 +113,4 @@ async function categorias(req, res) {
   } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
-module.exports = { listar, criar, atualizarStatus, avaliar, categorias };
+module.exports = { listar, criar, atualizarStatus, avaliar, excluir, categorias };

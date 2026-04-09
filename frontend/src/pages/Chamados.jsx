@@ -149,7 +149,7 @@ export default function Chamados() {
             <p style={s.modalSub}>A equipe de limpeza será notificada pelo WhatsApp automaticamente.</p>
             <form onSubmit={abrirChamado} style={s.form}>
               <div style={s.field}><label style={s.label}>TIPO DE SOLICITAÇÃO</label>
-                <select style={s.input} value={form.category_id} onChange={e => setForm({...form, category_id:e.target.value})} required>
+                <select style={s.select} value={form.category_id} onChange={e => setForm({...form, category_id:e.target.value})} required>
                   <option value="">Selecione...</option>
                   {categorias.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -222,6 +222,7 @@ const s = {
   field:        { display:'flex', flexDirection:'column', gap:6 },
   label:        { fontSize:10, fontWeight:600, color:'var(--text3)', letterSpacing:'0.1em' },
   input:        { padding:'11px 14px', background:'rgba(255,255,255,0.05)', border:'1px solid var(--border)', borderRadius:10, fontSize:14, color:'var(--text)', outline:'none', fontFamily:'Sora,sans-serif' },
+  select:       { padding:'11px 14px', background:'#1e1b2e', border:'1px solid var(--border)', borderRadius:10, fontSize:14, color:'var(--text)', outline:'none', fontFamily:'Sora,sans-serif', appearance:'none', WebkitAppearance:'none', width:'100%' },
   prioGroup:    { display:'flex', gap:8 },
   prioOpt:      { flex:1, padding:'10px', borderRadius:10, border:'1px solid var(--border)', background:'rgba(255,255,255,0.03)', color:'var(--text3)', fontSize:13, textAlign:'center', cursor:'pointer' },
   prioOptAtivo: { border:'1px solid rgba(124,58,237,0.5)', background:'rgba(124,58,237,0.15)', color:'var(--purple2)', fontWeight:600 },
