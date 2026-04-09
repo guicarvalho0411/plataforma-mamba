@@ -12,7 +12,7 @@ export default function ClientMeetings() {
   const [meetings, setMeetings] = useState([]);
   const [salas, setSalas]       = useState([]);
   const [modal, setModal]       = useState(false);
-  const [form, setForm]         = useState({ client_name:'', client_company:'', meeting_date:'', start_time:'', end_time:'', room_id:'', notes:'' });
+  const [form, setForm]         = useState({ client_name:'', client_company:'', meeting_date:'', start_time:'', room_name:'', notes:'' });
   const [loading, setLoading]   = useState(false);
   const [erro, setErro]         = useState('');
 
@@ -27,7 +27,7 @@ export default function ClientMeetings() {
     try {
       await api.post('/client-meetings', form);
       setModal(false);
-      setForm({ client_name:'', client_company:'', meeting_date:'', start_time:'', end_time:'', room_id:'', notes:'' });
+      setForm({ client_name:'', client_company:'', meeting_date:'', start_time:'', room_name:'', notes:'' });
       carregar();
     } catch (err) { setErro(err.response?.data?.error || 'Erro ao agendar'); }
     finally { setLoading(false); }
@@ -102,19 +102,11 @@ export default function ClientMeetings() {
               <div style={s.field}><label style={s.label}>DATA</label>
                 <input type="date" style={s.input} value={form.meeting_date} onChange={e => setForm({...form, meeting_date:e.target.value})} required />
               </div>
-              <div style={{ display:'flex', gap:12 }}>
-                <div style={{ ...s.field, flex:1 }}><label style={s.label}>INÍCIO</label>
-                  <input type="time" style={s.input} value={form.start_time} onChange={e => setForm({...form, start_time:e.target.value})} required />
-                </div>
-                <div style={{ ...s.field, flex:1 }}><label style={s.label}>FIM</label>
-                  <input type="time" style={s.input} value={form.end_time} onChange={e => setForm({...form, end_time:e.target.value})} required />
-                </div>
+              <div style={s.field}><label style={s.label}>INÍCIO</label>
+                <input type="time" style={s.input} value={form.start_time} onChange={e => setForm({...form, start_time:e.target.value})} required />
               </div>
               <div style={s.field}><label style={s.label}>SALA DE REUNIÃO</label>
-                <select style={s.input} value={form.room_id} onChange={e => setForm({...form, room_id:e.target.value})}>
-                  <option value="">Selecione uma sala (opcional)</option>
-                  {salas.map(s2 => <option key={s2.id} value={s2.id}>{s2.name} — Andar {s2.floor}</option>)}
-                </select>
+                <input style={s.input} value={form.room_name} onChange={e => setForm({...form, room_name:e.target.value})} placeholder="Ex: Sala 3, Sala da Diretoria..." />
               </div>
               <div style={s.field}><label style={s.label}>OBSERVAÇÕES</label>
                 <textarea style={{ ...s.input, minHeight:70, resize:'vertical' }} value={form.notes} onChange={e => setForm({...form, notes:e.target.value})} placeholder="Ex: Trazer café, preparar sala..." />
@@ -150,8 +142,8 @@ function MeetingCard({ m, onCancel }) {
           <span style={{ ...s.badge, background:st.bg, color:st.cor }}>{st.label}</span>
         </div>
         <div style={s.cardMeta}>
-          <span>🕐 {m.start_time?.slice(0,5)} — {m.end_time?.slice(0,5)}</span>
-          {m.sala_nome && <span>🚪 {m.sala_nome}</span>}
+          <span>🕐 {m.start_time?.slice(0,5)}</span>
+          {(m.sala_nome || m.attendees) && <span>🚪 {m.sala_nome || m.attendees}</span>}
           <span>👤 {m.agendado_por}</span>
         </div>
         {m.notes && <div style={s.cardNotes}>📝 {m.notes}</div>}

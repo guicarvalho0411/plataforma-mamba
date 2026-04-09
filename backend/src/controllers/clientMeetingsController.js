@@ -14,67 +14,78 @@ async function listar(req, res) {
   } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
+function agendarLembrete(meeting_date, start_time, client_name, room_name) {
+  try {
+    const [ano, mes, dia] = meeting_date.split('-').map(Number);
+    const [hora, min] = start_time.slice(0, 5).split(':').map(Number);
+    const dataReuniao = new Date(ano, mes - 1, dia, hora, min, 0);
+    const dataLembrete = new Date(dataReuniao.getTime() - 15 * 60 * 1000);
+    const agora = Date.now();
+    const diff = dataLembrete.getTime() - agora;
+
+    if (diff <= 0) return;
+
+    setTimeout(async () => {
+      const msg = [
+        `⏰ *Lembrete: reunião em 15 minutos!*`,
+        ``,
+        `👤 *Cliente:* ${client_name}`,
+        `🕐 *Horário:* ${start_time.slice(0, 5)}`,
+        room_name ? `🚪 *Sala:* ${room_name}` : '',
+        ``,
+        `Prepare o espaço agora! 🧹`,
+      ].filter(Boolean).join('\n');
+      await notificarGrupoLimpeza(msg);
+    }, diff);
+  } catch (e) {
+    console.error('[Lembrete] Erro ao agendar:', e.message);
+  }
+}
+
 async function criar(req, res) {
-  const { client_name, client_company, meeting_date, start_time, end_time, room_id, notes, attendees } = req.body;
-  if (!client_name || !meeting_date || !start_time || !end_time)
-    return res.status(400).json({ error: 'Cliente, data, inicio e fim sao obrigatorios' });
+  const { client_name, client_company, meeting_date, start_time, room_name, notes } = req.body;
+  if (!client_name || !meeting_date || !start_time)
+    return res.status(400).json({ error: 'Cliente, data e horário são obrigatórios' });
 
   try {
-    // Cria a reuniao
     const { rows } = await pool.query(
-      `INSERT INTO client_meetings (user_id, client_name, client_company, meeting_date, start_time, end_time, room_id, notes, attendees)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-      [req.user.id, client_name, client_company||null, meeting_date, start_time, end_time, room_id||null, notes||null, attendees||null]
+      `INSERT INTO client_meetings (user_id, client_name, client_company, meeting_date, start_time, end_time, notes, attendees)
+       VALUES ($1,$2,$3,$4,$5,$5,$6,$7) RETURNING *`,
+      [req.user.id, client_name, client_company || null, meeting_date, start_time, notes || null, room_name || null]
     );
     const meeting = rows[0];
 
-    // Reserva a sala automaticamente se foi selecionada
-    if (room_id) {
-      await pool.query(
-        `INSERT INTO room_bookings (room_id, user_id, title, start_time, end_time)
-         VALUES ($1,$2,$3,$4,$5)
-         ON CONFLICT DO NOTHING`,
-        [room_id, req.user.id, `Reuniao: ${client_name}`, `${meeting_date}T${start_time}`, `${meeting_date}T${end_time}`]
-      ).catch(() => {});
-    }
-
-    // Busca nome da sala
-    let salaNome = 'A definir';
-    if (room_id) {
-      const sala = await pool.query('SELECT name FROM rooms WHERE id=$1', [room_id]);
-      salaNome = sala.rows[0]?.name || 'A definir';
-    }
-
-    // Notifica grupo WhatsApp
     const dataFormatada = new Date(meeting_date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: '2-digit' });
     const msg = [
-      `🤝 *Reuniao com cliente agendada!*`,
+      `🤝 *Reunião com cliente agendada!*`,
       ``,
       `👤 *Cliente:* ${client_name}${client_company ? ` (${client_company})` : ''}`,
       `📅 *Data:* ${dataFormatada}`,
-      `🕐 *Horario:* ${start_time.slice(0,5)} ate ${end_time.slice(0,5)}`,
-      `🚪 *Sala:* ${salaNome}`,
+      `🕐 *Horário:* ${start_time.slice(0, 5)}`,
+      room_name ? `🚪 *Sala:* ${room_name}` : '',
       notes ? `📝 *Obs:* ${notes}` : '',
       ``,
-      `Por favor, prepare o espaco antes do horario! 🧹`,
+      `Por favor, prepare o espaço antes do horário! 🧹`,
     ].filter(Boolean).join('\n');
 
     await notificarGrupoLimpeza(msg);
+    agendarLembrete(meeting_date, start_time, client_name, room_name);
+
     res.status(201).json(meeting);
   } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
 async function atualizar(req, res) {
   const { id } = req.params;
-  const { client_name, client_company, meeting_date, start_time, end_time, room_id, notes, status } = req.body;
+  const { client_name, client_company, meeting_date, start_time, room_name, notes, status } = req.body;
   try {
     const { rows } = await pool.query(
       `UPDATE client_meetings SET client_name=$1, client_company=$2, meeting_date=$3,
-       start_time=$4, end_time=$5, room_id=$6, notes=$7, status=$8
-       WHERE id=$9 RETURNING *`,
-      [client_name, client_company, meeting_date, start_time, end_time, room_id, notes, status || 'agendado', id]
+       start_time=$4, end_time=$4, notes=$5, attendees=$6, status=$7
+       WHERE id=$8 RETURNING *`,
+      [client_name, client_company, meeting_date, start_time, notes, room_name, status || 'agendado', id]
     );
-    if (!rows[0]) return res.status(404).json({ error: 'Reuniao nao encontrada' });
+    if (!rows[0]) return res.status(404).json({ error: 'Reunião não encontrada' });
     res.json(rows[0]);
   } catch (err) { res.status(500).json({ error: err.message }); }
 }
@@ -82,7 +93,7 @@ async function atualizar(req, res) {
 async function remover(req, res) {
   try {
     await pool.query('UPDATE client_meetings SET status=$1 WHERE id=$2', ['cancelado', req.params.id]);
-    res.json({ message: 'Reuniao cancelada' });
+    res.json({ message: 'Reunião cancelada' });
   } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
