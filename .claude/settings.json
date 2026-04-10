@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Read(//tmp/**)",
+      "Bash(bash install.sh)",
+      "Bash(python3 -m json.tool /tmp/claude-user-memory/manifest-template.json)",
+      "Bash(node -e \"JSON.parse\\(require\\('fs'\\).readFileSync\\('/tmp/claude-user-memory/manifest-template.json','utf8'\\)\\)\")",
+      "Read(//c/tmp/claude-user-memory/**)"
+    ]
+  }
+}

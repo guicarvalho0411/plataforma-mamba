@@ -8,6 +8,6 @@ const pool = new Pool({
 
 pool.connect()
   .then(() => console.log('✅ Banco de dados conectado!'))
-  .catch(err => console.error('❌ Erro ao conectar no banco:', err.message));
+  .catch(err => console.error('❌ Erro ao conectar no banco:', err));
 
 module.exports = pool;

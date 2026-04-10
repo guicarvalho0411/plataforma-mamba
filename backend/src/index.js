@@ -18,24 +18,14 @@ app.use('/api/stock',          require('./routes/stock'));
 
 app.get('/', (req, res) => res.json({ status: 'Servidor rodando!' }));
 
-app.get('/whatsapp/qrcode', async (req, res) => {
-  const { getQRCodeImage, getStatus } = require('./services/whatsapp');
-  if (getStatus()) return res.send('<h2>✅ WhatsApp conectado!</h2>');
-  const img = await getQRCodeImage();
-  if (!img) return res.send('<h2>Aguardando QR Code... Atualize a página em alguns segundos.</h2>');
-  res.send(`<h2>Escaneie o QR Code com o WhatsApp</h2><img src="${img}" />`);
-});
-
-app.get('/whatsapp/anunciar', async (req, res) => {
-  const { notificarGrupoLimpeza, getStatus } = require('./services/whatsapp');
-  if (!getStatus()) return res.send('<h2>⚠️ WhatsApp não conectado. Aguarde e tente novamente.</h2>');
-  await notificarGrupoLimpeza(
-    `📅 *Nova funcionalidade ativada!*\n\n` +
-    `A partir de agora, todo dia às *13h* você receberá aqui um resumo com todas as reuniões com clientes agendadas para o dia.\n\n` +
-    `Além disso, reuniões que passarem do dia são arquivadas automaticamente como *realizadas*.\n\n` +
-    `Nenhuma reunião será esquecida! 🧹✅`
-  );
-  res.send('<h2>✅ Anúncio enviado no grupo!</h2>');
+// QR Code e status do WhatsApp estão no whatsapp-service (serviço separado no Railway)
+app.get('/whatsapp/status', async (req, res) => {
+  const WA_URL = process.env.WHATSAPP_SERVICE_URL;
+  if (!WA_URL) return res.json({ connected: false, note: 'WHATSAPP_SERVICE_URL não configurado' });
+  try {
+    const { data } = await require('axios').get(`${WA_URL}/status`, { timeout: 5000 });
+    res.json(data);
+  } catch { res.json({ connected: false }); }
 });
 
 const PORT = process.env.PORT || 3001;

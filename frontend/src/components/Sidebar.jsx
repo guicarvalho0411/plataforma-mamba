@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const menus = [
   { path:'/',                label:'Dashboard',         icon:'▦', desc:'Visão geral' },
-  { path:'/chamados',        label:'Chamados',           icon:'◎', desc:'Equipe de limpeza' },
+  { path:'/chamados',        label:'Tarefas',             icon:'◎', desc:'Equipe de limpeza' },
   { path:'/reunioes-cliente',label:'Reuniões Clientes',  icon:'🤝', desc:'Agendamentos' },
   { path:'/escala',          label:'Escala',             icon:'◈', desc:'Equipe de limpeza' },
   { path:'/estoque',         label:'Estoque',            icon:'📦', desc:'Materiais de limpeza' },
