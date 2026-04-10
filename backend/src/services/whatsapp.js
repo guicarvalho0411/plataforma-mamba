@@ -1,14 +1,65 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, RemoteAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const QRCode = require('qrcode');
+const AdmZip = require('adm-zip');
+const fs = require('fs');
+const path = require('path');
+const pool = require('../db');
 
 const GRUPO_LIMPEZA = process.env.WHATSAPP_GRUPO_LIMPEZA || '';
+const SESSION_NAME = 'mamba-session';
 
 let qrCodeData = null;
 let isReady = false;
 
+// ─── Store PostgreSQL para RemoteAuth ─────────────────────────
+class PgStore {
+  async sessionExists({ session }) {
+    const { rows } = await pool.query(
+      'SELECT id FROM whatsapp_sessions WHERE session_name=$1', [session]
+    );
+    return rows.length > 0;
+  }
+
+  async save({ session }) {
+    const zipPath = `./${session}.zip`;
+    if (!fs.existsSync(zipPath)) return;
+    const data = fs.readFileSync(zipPath).toString('base64');
+    await pool.query(
+      `INSERT INTO whatsapp_sessions (session_name, session_data, updated_at)
+       VALUES ($1, $2, NOW())
+       ON CONFLICT (session_name) DO UPDATE SET session_data=$2, updated_at=NOW()`,
+      [session, data]
+    );
+    console.log('[WhatsApp] Sessão salva no banco.');
+  }
+
+  async extract({ session, path: destPath }) {
+    const { rows } = await pool.query(
+      'SELECT session_data FROM whatsapp_sessions WHERE session_name=$1', [session]
+    );
+    if (!rows[0]) return;
+    const zipBuffer = Buffer.from(rows[0].session_data, 'base64');
+    const zipPath = `./${session}.zip`;
+    fs.writeFileSync(zipPath, zipBuffer);
+    const zip = new AdmZip(zipPath);
+    zip.extractAllTo(destPath, true);
+    fs.unlinkSync(zipPath);
+    console.log('[WhatsApp] Sessão restaurada do banco.');
+  }
+
+  async delete({ session }) {
+    await pool.query('DELETE FROM whatsapp_sessions WHERE session_name=$1', [session]);
+  }
+}
+
+// ─── Cliente WhatsApp ──────────────────────────────────────────
 const client = new Client({
-  authStrategy: new LocalAuth(),
+  authStrategy: new RemoteAuth({
+    store: new PgStore(),
+    session: SESSION_NAME,
+    backupSyncIntervalMs: 60000, // salva a cada 1 minuto
+  }),
   puppeteer: {
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
     args: [
@@ -41,14 +92,22 @@ client.on('auth_failure', () => {
   console.error('[WhatsApp] Falha na autenticação.');
 });
 
+client.on('remote_session_saved', () => {
+  console.log('[WhatsApp] Sessão sincronizada com o banco.');
+});
+
 client.on('disconnected', (reason) => {
   isReady = false;
   console.warn('[WhatsApp] Desconectado:', reason);
-  client.initialize();
+  setTimeout(() => {
+    console.log('[WhatsApp] Tentando reconectar...');
+    client.initialize();
+  }, 5000);
 });
 
 client.initialize();
 
+// ─── Funções exportadas ────────────────────────────────────────
 async function notificarGrupoLimpeza(mensagem) {
   if (!GRUPO_LIMPEZA) {
     console.log('[WhatsApp] WHATSAPP_GRUPO_LIMPEZA não configurado:', mensagem);
