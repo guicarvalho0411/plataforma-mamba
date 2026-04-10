@@ -13,7 +13,7 @@ export default function ClientMeetings() {
   const [meetings, setMeetings] = useState([]);
   const [salas, setSalas]       = useState([]);
   const [modal, setModal]       = useState(false);
-  const [form, setForm]         = useState({ client_name:'', client_company:'', meeting_date:'', start_time:'', room_name:'', notes:'', cafe_agua:false });
+  const [form, setForm]         = useState({ client_name:'', client_company:'', dia:'', mes:'', start_time:'', room_name:'', notes:'', cafe_agua:false });
   const [loading, setLoading]   = useState(false);
   const [erro, setErro]         = useState('');
 
@@ -26,9 +26,18 @@ export default function ClientMeetings() {
   async function salvar(e) {
     e.preventDefault(); setErro(''); setLoading(true);
     try {
-      await api.post('/client-meetings', form);
+      const hoje = new Date();
+      let ano = hoje.getFullYear();
+      const mesNum = parseInt(form.mes);
+      const diaNum = parseInt(form.dia);
+      // Se a data já passou este ano, usa o próximo ano
+      if (mesNum < hoje.getMonth() + 1 || (mesNum === hoje.getMonth() + 1 && diaNum < hoje.getDate())) {
+        ano += 1;
+      }
+      const meeting_date = `${ano}-${String(mesNum).padStart(2,'0')}-${String(diaNum).padStart(2,'0')}`;
+      await api.post('/client-meetings', { ...form, meeting_date });
       setModal(false);
-      setForm({ client_name:'', client_company:'', meeting_date:'', start_time:'', room_name:'', notes:'', cafe_agua:false });
+      setForm({ client_name:'', client_company:'', dia:'', mes:'', start_time:'', room_name:'', notes:'', cafe_agua:false });
       carregar();
     } catch (err) { setErro(err.response?.data?.error || 'Erro ao agendar'); }
     finally { setLoading(false); }
@@ -107,7 +116,15 @@ export default function ClientMeetings() {
                 </div>
               </div>
               <div style={s.field}><label style={s.label}>DATA</label>
-                <input type="date" style={s.input} value={form.meeting_date} onChange={e => setForm({...form, meeting_date:e.target.value})} required />
+                <div style={{ display:'flex', gap:8 }}>
+                  <input style={{ ...s.input, flex:1, textAlign:'center' }} value={form.dia} onChange={e => setForm({...form, dia:e.target.value.replace(/\D/g,'')})} placeholder="Dia" maxLength={2} required />
+                  <select style={{ ...s.input, flex:2 }} value={form.mes} onChange={e => setForm({...form, mes:e.target.value})} required>
+                    <option value="">Mês</option>
+                    {['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((m,i) => (
+                      <option key={i+1} value={i+1}>{m}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div style={s.field}><label style={s.label}>INÍCIO</label>
                 <input type="time" style={s.input} value={form.start_time} onChange={e => setForm({...form, start_time:e.target.value})} required />
