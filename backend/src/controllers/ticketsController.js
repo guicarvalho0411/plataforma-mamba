@@ -46,10 +46,10 @@ async function criar(req, res) {
     const msg = [
       `${icon} *Nova tarefa!*`,
       ``,
-      `📍 *Local:* ${location || 'Nao informado'}`,
+      `📍 *Local:* ${location || 'Não informado'}`,
       `🏷 *Tipo:* ${catNome}`,
       `⚡ *Prioridade:* ${prioLabel}`,
-      `📝 *Descricao:* ${description}`,
+      `📝 *Descrição:* ${description}`,
       `👤 *Solicitado por:* ${req.user.name}`,
     ].join('\n');
     await notificarGrupoLimpeza(msg);
