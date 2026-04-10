@@ -62,4 +62,13 @@ async function trocarSenha(req, res) {
   } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
-module.exports = { listar, criar, atualizar, trocarSenha };
+// DELETE /api/users/:id
+async function excluir(req, res) {
+  try {
+    const { rows } = await pool.query('DELETE FROM users WHERE id=$1 RETURNING id', [req.params.id]);
+    if (!rows[0]) return res.status(404).json({ error: 'Usuário não encontrado' });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+}
+
+module.exports = { listar, criar, atualizar, trocarSenha, excluir };

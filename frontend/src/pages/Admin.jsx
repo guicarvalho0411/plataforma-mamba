@@ -55,6 +55,12 @@ function TabUsuarios() {
     carregar();
   }
 
+  async function excluir(u) {
+    if (!confirm(`Excluir o usuário "${u.name}" permanentemente?`)) return;
+    await api.delete(`/users/${u.id}`);
+    carregar();
+  }
+
   return (
     <div>
       <div style={s.listHeader}>
@@ -71,6 +77,7 @@ function TabUsuarios() {
             </div>
             <span style={{ ...s.roleBadge, ...(u.role === 'admin' ? s.roleAdmin : u.role === 'facilities' ? s.roleFacilities : s.roleColab) }}>{u.role}</span>
             <div style={{ ...s.statusDot, background: u.active ? '#10B981' : '#EF4444' }} title={u.active ? 'Ativo' : 'Inativo'} onClick={() => toggleAtivo(u)} />
+            <button style={s.btnExcluir} onClick={() => excluir(u)}>✕</button>
           </div>
         ))}
       </div>
@@ -267,6 +274,7 @@ const s = {
   roleFacilities:{ background: 'rgba(59,130,246,0.15)', color: '#3B82F6' },
   roleColab:    { background: 'rgba(255,255,255,0.06)', color: 'var(--text3)' },
   statusDot:    { width: 10, height: 10, borderRadius: '50%', flexShrink: 0, cursor: 'pointer' },
+  btnExcluir:   { background: 'rgba(239,68,68,0.1)', color: '#EF4444', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', fontSize: 11, fontFamily: 'Sora,sans-serif', flexShrink: 0 },
   overlay:      { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, backdropFilter: 'blur(4px)' },
   modal:        { background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 460, maxHeight: '90vh', overflowY: 'auto' },
   modalHeader:  { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
