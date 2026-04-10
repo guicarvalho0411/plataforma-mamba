@@ -12,7 +12,7 @@ const COLABORADORAS = [
   { name: 'Julika', dias: [1,2,3,4,5], start: '06:00', end: '16:00', endSex: '15:00' },
   { name: 'Lu',     dias: [1,2,3,4,5], start: '07:00', end: '17:00', endSex: '16:00' },
   { name: 'Ale',    dias: [1,2,3,4,5], start: '11:00', end: '21:00', endSex: '20:00' },
-  { name: 'Elis',   dias: [2,3,4,5,6], start: '10:00', end: '20:00', endSex: '19:00' },
+  { name: 'Elis',   dias: [2,3,4,5,6], start: '10:00', end: '20:00', endSex: '19:00', startSab: '08:00', endSab: '17:00' },
 ];
 
 // Gera datas para as próximas 12 semanas
@@ -59,16 +59,19 @@ async function seed() {
     const dateStr = data.toISOString().split('T')[0];
     const isSexta = diaSemana === 5;
 
+    const isSabado = diaSemana === 6;
+
     for (const c of COLABORADORAS) {
       if (!c.dias.includes(diaSemana)) continue;
 
-      const fim = isSexta ? c.endSex : c.end;
+      const inicio = (isSabado && c.startSab) ? c.startSab : c.start;
+      const fim = isSexta ? c.endSex : (isSabado && c.endSab) ? c.endSab : c.end;
 
       await pool.query(
         `INSERT INTO schedules (cleaner_id, date, shift_start, shift_end, type)
          VALUES ($1, $2, $3, $4, 'turno')
          ON CONFLICT (cleaner_id, date) DO NOTHING`,
-        [ids[c.name], dateStr, c.start, fim]
+        [ids[c.name], dateStr, inicio, fim]
       );
       count++;
     }
