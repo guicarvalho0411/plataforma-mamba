@@ -53,9 +53,9 @@ export default function Dashboard() {
           <div style={s.escalaList}>
             {escalaHoje.map((e, i) => (
               <div key={i} style={s.escalaItem}>
-                <div style={s.escalaAvatar}>{e.colaboradora?.[0]}</div>
+                <div style={s.escalaAvatar}>{(e.colaboradora || e.name)?.[0]}</div>
                 <div style={s.escalaInfo}>
-                  <span style={s.escalaNome}>{e.colaboradora}</span>
+                  <span style={s.escalaNome}>{e.colaboradora || e.name}</span>
                   <span style={s.escalaArea}>{e.area || e.default_area}</span>
                 </div>
                 <div style={s.escalaTurnoBox}>
