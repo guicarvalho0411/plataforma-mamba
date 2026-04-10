@@ -12,7 +12,7 @@ export default function ClientMeetings() {
   const [meetings, setMeetings] = useState([]);
   const [salas, setSalas]       = useState([]);
   const [modal, setModal]       = useState(false);
-  const [form, setForm]         = useState({ client_name:'', client_company:'', meeting_date:'', start_time:'', room_name:'', notes:'' });
+  const [form, setForm]         = useState({ client_name:'', client_company:'', meeting_date:'', start_time:'', room_name:'', notes:'', cafe_agua:false });
   const [loading, setLoading]   = useState(false);
   const [erro, setErro]         = useState('');
 
@@ -27,7 +27,7 @@ export default function ClientMeetings() {
     try {
       await api.post('/client-meetings', form);
       setModal(false);
-      setForm({ client_name:'', client_company:'', meeting_date:'', start_time:'', room_name:'', notes:'' });
+      setForm({ client_name:'', client_company:'', meeting_date:'', start_time:'', room_name:'', notes:'', cafe_agua:false });
       carregar();
     } catch (err) { setErro(err.response?.data?.error || 'Erro ao agendar'); }
     finally { setLoading(false); }
@@ -109,7 +109,13 @@ export default function ClientMeetings() {
                 <input style={s.input} value={form.room_name} onChange={e => setForm({...form, room_name:e.target.value})} placeholder="Ex: Sala 3, Sala da Diretoria..." />
               </div>
               <div style={s.field}><label style={s.label}>OBSERVAÇÕES</label>
-                <textarea style={{ ...s.input, minHeight:70, resize:'vertical' }} value={form.notes} onChange={e => setForm({...form, notes:e.target.value})} placeholder="Ex: Trazer café, preparar sala..." />
+                <textarea style={{ ...s.input, minHeight:70, resize:'vertical' }} value={form.notes} onChange={e => setForm({...form, notes:e.target.value})} placeholder="Ex: Preparar sala, trazer documentos..." />
+              </div>
+              <div style={s.checkRow} onClick={() => setForm({...form, cafe_agua:!form.cafe_agua})}>
+                <div style={{ ...s.checkbox, ...(form.cafe_agua ? s.checkboxOn : {}) }}>
+                  {form.cafe_agua && <span style={{ color:'#fff', fontSize:11, fontWeight:700 }}>✓</span>}
+                </div>
+                <span style={s.checkLabel}>☕ Preparar café e água para a reunião</span>
               </div>
               {erro && <div style={s.erro}>{erro}</div>}
               <div style={s.modalBtns}>
@@ -192,4 +198,8 @@ const s = {
   erro:        { background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.2)', color:'#FCA5A5', borderRadius:10, padding:'10px 14px', fontSize:13 },
   modalBtns:   { display:'flex', gap:10, justifyContent:'flex-end', marginTop:4 },
   btnCancel:   { background:'rgba(255,255,255,0.05)', color:'var(--text2)', border:'1px solid var(--border)', borderRadius:10, padding:'10px 18px', fontSize:13, cursor:'pointer', fontFamily:'Sora,sans-serif' },
+  checkRow:    { display:'flex', alignItems:'center', gap:10, cursor:'pointer', padding:'10px 14px', background:'rgba(255,255,255,0.03)', border:'1px solid var(--border)', borderRadius:10 },
+  checkbox:    { width:18, height:18, borderRadius:5, border:'1.5px solid var(--border)', background:'rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.15s' },
+  checkboxOn:  { background:'var(--purple)', border:'1.5px solid var(--purple2)' },
+  checkLabel:  { fontSize:13, color:'var(--text2)' },
 };

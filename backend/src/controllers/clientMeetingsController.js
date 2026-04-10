@@ -43,7 +43,7 @@ function agendarLembrete(meeting_date, start_time, client_name, room_name) {
 }
 
 async function criar(req, res) {
-  const { client_name, client_company, meeting_date, start_time, room_name, notes } = req.body;
+  const { client_name, client_company, meeting_date, start_time, room_name, notes, cafe_agua } = req.body;
   if (!client_name || !meeting_date || !start_time)
     return res.status(400).json({ error: 'Cliente, data e horário são obrigatórios' });
 
@@ -64,6 +64,7 @@ async function criar(req, res) {
       `🕐 *Horário:* ${start_time.slice(0, 5)}`,
       room_name ? `🚪 *Sala:* ${room_name}` : '',
       notes ? `📝 *Obs:* ${notes}` : '',
+      cafe_agua ? `☕ *Café e água:* Preparar para a reunião` : '',
       ``,
       `Por favor, prepare o espaço antes do horário! 🧹`,
     ].filter(Boolean).join('\n');
