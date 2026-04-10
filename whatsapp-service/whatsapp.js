@@ -3,7 +3,18 @@ const qrcode = require('qrcode-terminal');
 const QRCode = require('qrcode');
 const AdmZip = require('adm-zip');
 const fs = require('fs');
+const { execSync } = require('child_process');
 const pool = require('./db');
+
+// Encontra o caminho do chromium automaticamente
+function findChromium() {
+  const fromEnv = process.env.PUPPETEER_EXECUTABLE_PATH;
+  if (fromEnv && fs.existsSync(fromEnv)) return fromEnv;
+  try {
+    return execSync('which chromium || which chromium-browser || which google-chrome-stable || which google-chrome')
+      .toString().trim().split('\n')[0];
+  } catch { return undefined; }
+}
 
 const GRUPO_LIMPEZA = process.env.WHATSAPP_GRUPO_LIMPEZA || '';
 const SESSION_NAME = 'mamba-session';
@@ -58,7 +69,7 @@ const client = new Client({
     backupSyncIntervalMs: 60000, // salva a cada 60 segundos (mínimo aceito)
   }),
   puppeteer: {
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+    executablePath: findChromium(),
     args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
