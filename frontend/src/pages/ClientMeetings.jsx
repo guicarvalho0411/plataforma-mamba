@@ -158,9 +158,10 @@ export default function ClientMeetings() {
 
 function MeetingCard({ m, onCancel, onExcluir }) {
   const st = STATUS_MEETING[m.status] || STATUS_MEETING.agendado;
-  const d = m.meeting_date ? new Date(m.meeting_date + 'T12:00:00') : null;
-  const dia = d ? String(d.getDate()).padStart(2, '0') : '--';
-  const mes = d ? d.toLocaleDateString('pt-BR', { month:'short' }) : '--';
+  const rawDate = m.meeting_date ? m.meeting_date.split('T')[0] : null;
+  const d = rawDate ? new Date(rawDate + 'T12:00:00') : null;
+  const dia = d && !isNaN(d) ? String(d.getDate()).padStart(2, '0') : '--';
+  const mes = d && !isNaN(d) ? d.toLocaleDateString('pt-BR', { month:'short' }) : '--';
   return (
     <div style={s.card}>
       <div style={s.cardDate}>
