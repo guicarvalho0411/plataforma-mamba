@@ -72,4 +72,13 @@ async function remover(req, res) {
   } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
-module.exports = { listar, criar, atualizar, remover };
+async function excluir(req, res) {
+  try {
+    await pool.query('DELETE FROM meeting_reminders WHERE meeting_id=$1', [req.params.id]);
+    const { rows } = await pool.query('DELETE FROM client_meetings WHERE id=$1 RETURNING *', [req.params.id]);
+    if (!rows[0]) return res.status(404).json({ error: 'Reunião não encontrada' });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+}
+
+module.exports = { listar, criar, atualizar, remover, excluir };

@@ -39,6 +39,12 @@ export default function ClientMeetings() {
     carregar();
   }
 
+  async function excluir(id) {
+    if (!confirm('Excluir esta reunião permanentemente?')) return;
+    await api.delete(`/client-meetings/${id}/excluir`);
+    carregar();
+  }
+
   const hoje = new Date().toISOString().split('T')[0];
   const proximas = meetings.filter(m => m.meeting_date?.split('T')[0] >= hoje && m.status === 'agendado');
   const passadas  = meetings.filter(m => m.meeting_date?.split('T')[0] < hoje || m.status !== 'agendado');
@@ -58,7 +64,7 @@ export default function ClientMeetings() {
         <div style={s.section}>
           <div style={s.sectionTitle}>📅 Próximas reuniões</div>
           <div style={s.list}>
-            {proximas.map(m => <MeetingCard key={m.id} m={m} onCancel={cancelar} />)}
+            {proximas.map(m => <MeetingCard key={m.id} m={m} onCancel={cancelar} onExcluir={excluir} />)}
           </div>
         </div>
       )}
@@ -68,7 +74,7 @@ export default function ClientMeetings() {
         <div style={s.section}>
           <div style={s.sectionTitle}>🕐 Histórico</div>
           <div style={s.list}>
-            {passadas.map(m => <MeetingCard key={m.id} m={m} onCancel={cancelar} />)}
+            {passadas.map(m => <MeetingCard key={m.id} m={m} onCancel={cancelar} onExcluir={excluir} />)}
           </div>
         </div>
       )}
@@ -132,14 +138,16 @@ export default function ClientMeetings() {
   );
 }
 
-function MeetingCard({ m, onCancel }) {
+function MeetingCard({ m, onCancel, onExcluir }) {
   const st = STATUS_MEETING[m.status] || STATUS_MEETING.agendado;
-  const data = m.meeting_date ? new Date(m.meeting_date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'short' }) : '';
+  const d = m.meeting_date ? new Date(m.meeting_date + 'T12:00:00') : null;
+  const dia = d ? String(d.getDate()).padStart(2, '0') : '--';
+  const mes = d ? d.toLocaleDateString('pt-BR', { month:'short' }) : '--';
   return (
     <div style={s.card}>
       <div style={s.cardDate}>
-        <div style={s.cardDay}>{data.split(',')[1]?.trim().split(' ')[0] || '--'}</div>
-        <div style={s.cardMonth}>{data.split(',')[1]?.trim().split(' ')[1] || '--'}</div>
+        <div style={s.cardDay}>{dia}</div>
+        <div style={s.cardMonth}>{mes}</div>
       </div>
       <div style={s.cardBody}>
         <div style={s.cardTop}>
@@ -154,9 +162,14 @@ function MeetingCard({ m, onCancel }) {
         </div>
         {m.notes && <div style={s.cardNotes}>📝 {m.notes}</div>}
       </div>
-      {m.status === 'agendado' && (
-        <button style={s.btnCancel2} onClick={() => onCancel(m.id)}>Cancelar</button>
-      )}
+      <div style={{ display:'flex', flexDirection:'column', gap:6, flexShrink:0 }}>
+        {m.status === 'agendado' && (
+          <button style={s.btnCancel2} onClick={() => onCancel(m.id)}>Cancelar</button>
+        )}
+        {m.status === 'cancelado' && (
+          <button style={s.btnExcluir} onClick={() => onExcluir(m.id)}>✕ Excluir</button>
+        )}
+      </div>
     </div>
   );
 }
@@ -198,6 +211,7 @@ const s = {
   erro:        { background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.2)', color:'#FCA5A5', borderRadius:10, padding:'10px 14px', fontSize:13 },
   modalBtns:   { display:'flex', gap:10, justifyContent:'flex-end', marginTop:4 },
   btnCancel:   { background:'rgba(255,255,255,0.05)', color:'var(--text2)', border:'1px solid var(--border)', borderRadius:10, padding:'10px 18px', fontSize:13, cursor:'pointer', fontFamily:'Sora,sans-serif' },
+  btnExcluir:  { background:'rgba(239,68,68,0.1)', color:'#EF4444', border:'1px solid rgba(239,68,68,0.2)', borderRadius:8, padding:'6px 12px', fontSize:11, cursor:'pointer', fontFamily:'Sora,sans-serif', flexShrink:0 },
   checkRow:    { display:'flex', alignItems:'center', gap:10, cursor:'pointer', padding:'10px 14px', background:'rgba(255,255,255,0.03)', border:'1px solid var(--border)', borderRadius:10 },
   checkbox:    { width:18, height:18, borderRadius:5, border:'1.5px solid var(--border)', background:'rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.15s' },
   checkboxOn:  { background:'var(--purple)', border:'1.5px solid var(--purple2)' },
