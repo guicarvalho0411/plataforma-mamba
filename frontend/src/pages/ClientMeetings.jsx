@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Layout from '../components/Layout';
 import api from '../services/api';
 
+
 const STATUS_MEETING = {
   agendado:  { cor:'#3B82F6', bg:'rgba(59,130,246,0.1)',  label:'Agendado' },
   realizado: { cor:'#10B981', bg:'rgba(16,185,129,0.1)',  label:'Realizado' },
