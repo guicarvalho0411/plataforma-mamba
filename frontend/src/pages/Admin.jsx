@@ -57,8 +57,10 @@ function TabUsuarios() {
 
   async function excluir(u) {
     if (!confirm(`Excluir o usuário "${u.name}" permanentemente?`)) return;
-    await api.delete(`/users/${u.id}`);
-    carregar();
+    try {
+      await api.delete(`/users/${u.id}`);
+      carregar();
+    } catch (err) { alert(err.response?.data?.error || 'Erro ao excluir usuário'); }
   }
 
   return (

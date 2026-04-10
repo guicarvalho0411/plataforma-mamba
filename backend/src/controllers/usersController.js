@@ -64,8 +64,11 @@ async function trocarSenha(req, res) {
 
 // DELETE /api/users/:id
 async function excluir(req, res) {
+  const { id } = req.params;
+  if (parseInt(id) === req.user.id)
+    return res.status(400).json({ error: 'Você não pode excluir sua própria conta' });
   try {
-    const { rows } = await pool.query('DELETE FROM users WHERE id=$1 RETURNING id', [req.params.id]);
+    const { rows } = await pool.query('DELETE FROM users WHERE id=$1 RETURNING id', [id]);
     if (!rows[0]) return res.status(404).json({ error: 'Usuário não encontrado' });
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
