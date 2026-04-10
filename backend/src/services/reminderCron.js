@@ -17,9 +17,8 @@ async function criarTabelaLembretes() {
 
 async function agendarLembreteBanco(meetingId, meeting_date, start_time) {
   try {
-    const [ano, mes, dia] = meeting_date.split('-').map(Number);
-    const [hora, min] = start_time.slice(0, 5).split(':').map(Number);
-    const dataReuniao = new Date(ano, mes - 1, dia, hora, min, 0);
+    // Usa offset explícito -03:00 (BRT) para não depender da timezone do servidor
+    const dataReuniao = new Date(`${meeting_date}T${start_time.slice(0, 5)}:00-03:00`);
     const remindAt = new Date(dataReuniao.getTime() - 15 * 60 * 1000);
 
     if (remindAt <= new Date()) return; // já passou
