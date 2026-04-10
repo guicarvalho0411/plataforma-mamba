@@ -18,6 +18,11 @@ app.use('/api/stock',          require('./routes/stock'));
 
 app.get('/', (req, res) => res.json({ status: 'Servidor rodando!' }));
 
+app.get('/api/whatsapp/status', (req, res) => {
+  const { getStatus } = require('./services/whatsapp');
+  res.json({ connected: getStatus() });
+});
+
 app.get('/whatsapp/qrcode', async (req, res) => {
   const { getQRCodeImage, getStatus } = require('./services/whatsapp');
   if (getStatus()) return res.send('<h2>✅ WhatsApp conectado!</h2>');
