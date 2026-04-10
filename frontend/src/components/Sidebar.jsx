@@ -50,7 +50,7 @@ export default function Sidebar() {
     <div style={s.sidebar}>
       <div style={{ overflowY:'auto', flex:1 }}>
         <div style={s.logoArea}>
-          <img src="/logo.png" alt="Mamba" style={s.logo} />
+          <img src="/mamba_original_branco.png" alt="Mamba" style={s.logo} />
           <div style={s.logoDivider} />
         </div>
         <div style={s.userBox}>
@@ -77,7 +77,7 @@ export default function Sidebar() {
 const s = {
   sidebar:        { width:248, height:'100vh', background:'var(--bg2)', borderRight:'1px solid var(--border)', display:'flex', flexDirection:'column', flexShrink:0, position:'sticky', top:0 },
   logoArea:       { padding:'24px 20px 0' },
-  logo:           { width:130, height:42, objectFit:'cover', objectPosition:'center 45%', display:'block' },
+  logo:           { width:120, display:'block' },
   logoDivider:    { height:1, background:'var(--border)', marginTop:20 },
   userBox:        { display:'flex', alignItems:'center', gap:10, padding:'14px 16px 8px', margin:'8px 8px 0', background:'rgba(255,255,255,0.03)', borderRadius:12 },
   avatar:         { width:32, height:32, borderRadius:9, background:'linear-gradient(135deg, var(--purple), var(--purple2))', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:700, fontSize:13, flexShrink:0 },

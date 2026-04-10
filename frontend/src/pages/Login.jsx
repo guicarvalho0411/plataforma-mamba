@@ -32,7 +32,7 @@ export default function Login() {
         {/* Lado esquerdo */}
         <div style={s.left}>
           <div style={s.logoBox}>
-            <img src="/logo.png" alt="Mamba" style={s.logoImg} />
+            <img src="/mamba_original_branco.png" alt="Mamba" style={s.logoImg} />
           </div>
           <p style={s.tagline}>Plataforma de<br/><span style={s.taglineHL}>Gestão Interna</span></p>
           <div style={s.features}>
@@ -97,7 +97,7 @@ const s = {
   wrapper:    { display: 'flex', gap: 60, alignItems: 'center', maxWidth: 900, width: '100%', zIndex: 1 },
   left:       { flex: 1, display: 'flex', flexDirection: 'column', gap: 28 },
   logoBox:    {},
-  logoImg:    { width: 200, height: 65, objectFit: 'cover', objectPosition: 'center 45%', display: 'block' },
+  logoImg:    { width: 180, display: 'block' },
   tagline:    { fontSize: 32, fontWeight: 700, color: 'var(--text)', lineHeight: 1.3 },
   taglineHL:  { color: 'var(--yellow)', display: 'block' },
   features:   { display: 'flex', flexDirection: 'column', gap: 12 },
