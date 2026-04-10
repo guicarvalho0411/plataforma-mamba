@@ -118,18 +118,12 @@ export default function ClientMeetings() {
               <div style={s.field}><label style={s.label}>DATA</label>
                 <div style={{ display:'flex', gap:8 }}>
                   <input style={{ ...s.input, width:80, textAlign:'center', flexShrink:0 }} value={form.dia} onChange={e => setForm({...form, dia:e.target.value.replace(/\D/g,'')})} placeholder="Dia" maxLength={2} required />
-                  <div style={{ flex:1, display:'flex', flexWrap:'wrap', gap:4 }}>
-                    {['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].map((m,i) => (
-                      <div key={i+1} onClick={() => setForm({...form, mes:String(i+1)})}
-                        style={{ padding:'5px 8px', borderRadius:8, fontSize:11, cursor:'pointer', fontFamily:'Sora,sans-serif',
-                          background: form.mes === String(i+1) ? 'rgba(124,58,237,0.4)' : 'rgba(255,255,255,0.05)',
-                          border: form.mes === String(i+1) ? '1px solid rgba(124,58,237,0.6)' : '1px solid var(--border)',
-                          color: form.mes === String(i+1) ? 'var(--purple2)' : 'var(--text2)',
-                          fontWeight: form.mes === String(i+1) ? 600 : 400 }}>
-                        {m}
-                      </div>
+                  <select style={s.selectDark} value={form.mes} onChange={e => setForm({...form, mes:e.target.value})} required>
+                    <option value="">Mês</option>
+                    {['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((m,i) => (
+                      <option key={i+1} value={i+1}>{m}</option>
                     ))}
-                  </div>
+                  </select>
                 </div>
               </div>
               <div style={s.field}><label style={s.label}>INÍCIO</label>
@@ -235,6 +229,7 @@ const s = {
   erro:        { background:'rgba(239,68,68,0.1)', border:'1px solid rgba(239,68,68,0.2)', color:'#FCA5A5', borderRadius:10, padding:'10px 14px', fontSize:13 },
   modalBtns:   { display:'flex', gap:10, justifyContent:'flex-end', marginTop:4 },
   btnCancel:   { background:'rgba(255,255,255,0.05)', color:'var(--text2)', border:'1px solid var(--border)', borderRadius:10, padding:'10px 18px', fontSize:13, cursor:'pointer', fontFamily:'Sora,sans-serif' },
+  selectDark:  { flex:1, padding:'11px 14px', background:'#1a1625', border:'1px solid var(--border)', borderRadius:10, fontSize:14, color:'var(--text)', outline:'none', fontFamily:'Sora,sans-serif', appearance:'none', WebkitAppearance:'none' },
   btnExcluir:  { background:'rgba(239,68,68,0.1)', color:'#EF4444', border:'1px solid rgba(239,68,68,0.2)', borderRadius:8, padding:'6px 12px', fontSize:11, cursor:'pointer', fontFamily:'Sora,sans-serif', flexShrink:0 },
   checkRow:    { display:'flex', alignItems:'center', gap:10, cursor:'pointer', padding:'10px 14px', background:'rgba(255,255,255,0.03)', border:'1px solid var(--border)', borderRadius:10 },
   checkbox:    { width:18, height:18, borderRadius:5, border:'1.5px solid var(--border)', background:'rgba(255,255,255,0.05)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'all 0.15s' },
