@@ -55,7 +55,7 @@ const client = new Client({
   authStrategy: new RemoteAuth({
     store: new PgStore(),
     session: SESSION_NAME,
-    backupSyncIntervalMs: 30000, // salva a cada 30 segundos
+    backupSyncIntervalMs: 60000, // salva a cada 60 segundos (mínimo aceito)
   }),
   puppeteer: {
     executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
