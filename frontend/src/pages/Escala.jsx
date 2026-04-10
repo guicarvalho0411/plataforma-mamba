@@ -113,7 +113,7 @@ export default function Escala() {
                       {cel ? (
                         <div style={{ ...s.celula, background: tp.bg, border: `1px solid ${tp.bdr}` }}>
                           <div style={{ ...s.celulaLabel, color: tp.cor }}>{tp.label}</div>
-                          {cel.shift_start && <div style={s.celulaHora}>{cel.shift_start.slice(0,5)}</div>}
+                          {cel.shift_start && <div style={s.celulaHora}>{cel.shift_start.slice(0,5)}{cel.shift_end ? ` às ${cel.shift_end.slice(0,5)}` : ''}</div>}
                         </div>
                       ) : <div style={s.celulaVazia}>—</div>}
                     </td>
