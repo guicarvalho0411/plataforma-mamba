@@ -34,7 +34,7 @@ async function agendarLembreteBanco(meetingId, meeting_date, start_time) {
 }
 
 function iniciarCron() {
-  // Roda a cada minuto
+  // ── 1. Lembrete 15min antes (verifica a cada minuto) ───────────
   cron.schedule('* * * * *', async () => {
     try {
       const { rows } = await pool.query(`
@@ -67,7 +67,68 @@ function iniciarCron() {
     }
   });
 
-  console.log('✅ Cron de lembretes iniciado (verifica a cada minuto)');
+  // ── 2. Resumo diário às 13h (horário de Brasília) ───────────────
+  cron.schedule('0 13 * * *', async () => {
+    try {
+      const { rows } = await pool.query(`
+        SELECT cm.client_name, cm.client_company, cm.start_time, cm.attendees AS room_name
+        FROM client_meetings cm
+        WHERE cm.meeting_date = (NOW() AT TIME ZONE 'America/Sao_Paulo')::date
+          AND cm.status = 'agendado'
+        ORDER BY cm.start_time
+      `);
+
+      const hoje = new Date().toLocaleDateString('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        weekday: 'long', day: '2-digit', month: '2-digit'
+      });
+
+      if (rows.length === 0) {
+        await notificarGrupoLimpeza(
+          `📅 *Reuniões de hoje — ${hoje}*\n\nNenhuma reunião agendada para hoje! ✅`
+        );
+        return;
+      }
+
+      const linhas = rows.map((r, i) => {
+        const nome = r.client_name + (r.client_company ? ` (${r.client_company})` : '');
+        const sala = r.room_name ? ` | 🚪 ${r.room_name}` : '';
+        return `${i + 1}. *${nome}*\n   🕐 ${r.start_time?.slice(0, 5)}${sala}`;
+      });
+
+      const msg = [
+        `📅 *Reuniões de hoje — ${hoje}*`,
+        ``,
+        ...linhas,
+        ``,
+        `Total: ${rows.length} reunião(ões) hoje`,
+      ].join('\n');
+
+      await notificarGrupoLimpeza(msg);
+      console.log(`✅ Resumo diário enviado (${rows.length} reuniões)`);
+    } catch (err) {
+      console.error('[reminderCron] Erro ao enviar resumo diário:', err.message);
+    }
+  }, { timezone: 'America/Sao_Paulo' });
+
+  // ── 3. Arquivar reuniões passadas à meia-noite (BRT) ───────────
+  cron.schedule('0 0 * * *', async () => {
+    try {
+      const { rowCount } = await pool.query(`
+        UPDATE client_meetings
+        SET status = 'realizado'
+        WHERE meeting_date < (NOW() AT TIME ZONE 'America/Sao_Paulo')::date
+          AND status = 'agendado'
+      `);
+      if (rowCount > 0) {
+        console.log(`✅ ${rowCount} reunião(ões) arquivadas automaticamente`);
+      }
+    } catch (err) {
+      console.error('[reminderCron] Erro ao arquivar reuniões:', err.message);
+    }
+  }, { timezone: 'America/Sao_Paulo' });
+
+  console.log('✅ Crons iniciados: lembrete 15min | resumo 13h | arquivar meia-noite');
 }
 
 module.exports = { criarTabelaLembretes, agendarLembreteBanco, iniciarCron };
