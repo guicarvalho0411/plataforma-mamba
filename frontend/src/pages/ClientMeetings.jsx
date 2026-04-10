@@ -117,13 +117,19 @@ export default function ClientMeetings() {
               </div>
               <div style={s.field}><label style={s.label}>DATA</label>
                 <div style={{ display:'flex', gap:8 }}>
-                  <input style={{ ...s.input, flex:1, textAlign:'center' }} value={form.dia} onChange={e => setForm({...form, dia:e.target.value.replace(/\D/g,'')})} placeholder="Dia" maxLength={2} required />
-                  <select style={{ ...s.input, flex:2 }} value={form.mes} onChange={e => setForm({...form, mes:e.target.value})} required>
-                    <option value="">Mês</option>
-                    {['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((m,i) => (
-                      <option key={i+1} value={i+1}>{m}</option>
+                  <input style={{ ...s.input, width:80, textAlign:'center', flexShrink:0 }} value={form.dia} onChange={e => setForm({...form, dia:e.target.value.replace(/\D/g,'')})} placeholder="Dia" maxLength={2} required />
+                  <div style={{ flex:1, display:'flex', flexWrap:'wrap', gap:4 }}>
+                    {['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'].map((m,i) => (
+                      <div key={i+1} onClick={() => setForm({...form, mes:String(i+1)})}
+                        style={{ padding:'5px 8px', borderRadius:8, fontSize:11, cursor:'pointer', fontFamily:'Sora,sans-serif',
+                          background: form.mes === String(i+1) ? 'rgba(124,58,237,0.4)' : 'rgba(255,255,255,0.05)',
+                          border: form.mes === String(i+1) ? '1px solid rgba(124,58,237,0.6)' : '1px solid var(--border)',
+                          color: form.mes === String(i+1) ? 'var(--purple2)' : 'var(--text2)',
+                          fontWeight: form.mes === String(i+1) ? 600 : 400 }}>
+                        {m}
+                      </div>
                     ))}
-                  </select>
+                  </div>
                 </div>
               </div>
               <div style={s.field}><label style={s.label}>INÍCIO</label>
