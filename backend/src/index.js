@@ -18,14 +18,12 @@ app.use('/api/stock',          require('./routes/stock'));
 
 app.get('/', (req, res) => res.json({ status: 'Servidor rodando!' }));
 
-// QR Code e status do WhatsApp estão no whatsapp-service (serviço separado no Railway)
-app.get('/whatsapp/status', async (req, res) => {
-  const WA_URL = process.env.WHATSAPP_SERVICE_URL;
-  if (!WA_URL) return res.json({ connected: false, note: 'WHATSAPP_SERVICE_URL não configurado' });
-  try {
-    const { data } = await require('axios').get(`${WA_URL}/status`, { timeout: 5000 });
-    res.json(data);
-  } catch { res.json({ connected: false }); }
+app.get('/whatsapp/qrcode', async (req, res) => {
+  const { getQRCodeImage, getStatus } = require('./services/whatsapp');
+  if (getStatus()) return res.send('<h2>✅ WhatsApp conectado!</h2>');
+  const img = await getQRCodeImage();
+  if (!img) return res.send('<h2>Aguardando QR Code... Atualize a página em alguns segundos.</h2>');
+  res.send(`<h2>Escaneie o QR Code com o WhatsApp</h2><img src="${img}" />`);
 });
 
 const PORT = process.env.PORT || 3001;
