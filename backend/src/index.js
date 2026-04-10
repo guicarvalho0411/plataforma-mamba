@@ -1,6 +1,7 @@
 const express = require('express');
 const cors    = require('cors');
 require('dotenv').config();
+const { criarTabelaLembretes, iniciarCron } = require('./services/reminderCron');
 
 const app = express();
 app.use(cors());
@@ -26,4 +27,8 @@ app.get('/whatsapp/qrcode', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
+app.listen(PORT, async () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
+  await criarTabelaLembretes();
+  iniciarCron();
+});

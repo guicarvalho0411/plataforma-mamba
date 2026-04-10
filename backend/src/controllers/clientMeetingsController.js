@@ -1,5 +1,6 @@
 const pool = require('../db');
 const { notificarGrupoLimpeza } = require('../services/whatsapp');
+const { agendarLembreteBanco } = require('../services/reminderCron');
 
 async function listar(req, res) {
   try {
@@ -14,33 +15,6 @@ async function listar(req, res) {
   } catch (err) { res.status(500).json({ error: err.message }); }
 }
 
-function agendarLembrete(meeting_date, start_time, client_name, room_name) {
-  try {
-    const [ano, mes, dia] = meeting_date.split('-').map(Number);
-    const [hora, min] = start_time.slice(0, 5).split(':').map(Number);
-    const dataReuniao = new Date(ano, mes - 1, dia, hora, min, 0);
-    const dataLembrete = new Date(dataReuniao.getTime() - 15 * 60 * 1000);
-    const agora = Date.now();
-    const diff = dataLembrete.getTime() - agora;
-
-    if (diff <= 0) return;
-
-    setTimeout(async () => {
-      const msg = [
-        `⏰ *Lembrete: reunião em 15 minutos!*`,
-        ``,
-        `👤 *Cliente:* ${client_name}`,
-        `🕐 *Horário:* ${start_time.slice(0, 5)}`,
-        room_name ? `🚪 *Sala:* ${room_name}` : '',
-        ``,
-        `Prepare o espaço agora! 🧹`,
-      ].filter(Boolean).join('\n');
-      await notificarGrupoLimpeza(msg);
-    }, diff);
-  } catch (e) {
-    console.error('[Lembrete] Erro ao agendar:', e.message);
-  }
-}
 
 async function criar(req, res) {
   const { client_name, client_company, meeting_date, start_time, room_name, notes, cafe_agua } = req.body;
@@ -70,7 +44,7 @@ async function criar(req, res) {
     ].filter(Boolean).join('\n');
 
     await notificarGrupoLimpeza(msg);
-    agendarLembrete(meeting_date, start_time, client_name, room_name);
+    await agendarLembreteBanco(meeting.id, meeting_date, start_time);
 
     res.status(201).json(meeting);
   } catch (err) { res.status(500).json({ error: err.message }); }
