@@ -108,13 +108,19 @@ client.on('disconnected', (reason) => {
 client.initialize();
 
 // ─── Funções exportadas ────────────────────────────────────────
-async function notificarGrupoLimpeza(mensagem) {
+async function notificarGrupoLimpeza(mensagem, mentionAll = false) {
   if (!GRUPO_LIMPEZA) {
     console.log('[WhatsApp] WHATSAPP_GRUPO_LIMPEZA não configurado:', mensagem);
     return;
   }
   try {
-    await client.sendMessage(GRUPO_LIMPEZA, mensagem);
+    if (mentionAll) {
+      const chat = await client.getChatById(GRUPO_LIMPEZA);
+      const mentions = chat.participants.map(p => p.id._serialized);
+      await chat.sendMessage(`@all\n${mensagem}`, { mentions });
+    } else {
+      await client.sendMessage(GRUPO_LIMPEZA, mensagem);
+    }
     console.log('[WhatsApp] Mensagem enviada ao grupo');
   } catch (err) {
     console.error('[WhatsApp] Erro ao enviar mensagem:', err.message);

@@ -52,7 +52,7 @@ async function criar(req, res) {
       `📝 *Descrição:* ${description}`,
       `👤 *Solicitado por:* ${req.user.name}`,
     ].join('\n');
-    await notificarGrupoLimpeza(msg);
+    await notificarGrupoLimpeza(msg, true);
     res.status(201).json(ticket);
   } catch (err) { res.status(500).json({ error: err.message }); }
 }

@@ -58,7 +58,7 @@ function iniciarCron() {
           `Prepare o espaço agora! 🧹`,
         ].filter(Boolean).join('\n');
 
-        await notificarGrupoLimpeza(msg);
+        await notificarGrupoLimpeza(msg, true);
         await pool.query(`UPDATE meeting_reminders SET sent = true WHERE id = $1`, [r.id]);
         console.log(`✅ Lembrete enviado para reunião ${r.meeting_id}`);
       }
