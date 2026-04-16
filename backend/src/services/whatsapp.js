@@ -69,7 +69,6 @@ const client = new Client({
       '--disable-accelerated-2d-canvas',
       '--no-first-run',
       '--no-zygote',
-      '--single-process',
       '--disable-gpu',
     ],
   },
@@ -96,16 +95,25 @@ client.on('remote_session_saved', () => {
   console.log('[WhatsApp] Sessão sincronizada com o banco.');
 });
 
-client.on('disconnected', (reason) => {
+client.on('disconnected', async (reason) => {
   isReady = false;
   console.warn('[WhatsApp] Desconectado:', reason);
-  setTimeout(() => {
+
+  if (reason === 'LOGOUT' || reason === 'CONFLICT') {
+    console.warn('[WhatsApp] Reconexão abortada (motivo:', reason, '). Reinicie o serviço manualmente.');
+    return;
+  }
+
+  setTimeout(async () => {
     console.log('[WhatsApp] Tentando reconectar...');
-    client.initialize();
+    try { await client.destroy(); } catch (err) {
+      console.warn('[WhatsApp] Erro ao destruir client:', err.message);
+    }
+    client.initialize().catch(err => console.error('[WhatsApp] Erro ao reinicializar:', err.message));
   }, 5000);
 });
 
-client.initialize();
+client.initialize().catch(err => console.error('[WhatsApp] Erro ao inicializar:', err.message));
 
 // ─── Funções exportadas ────────────────────────────────────────
 async function notificarGrupoLimpeza(mensagem, mentionAll = false) {
