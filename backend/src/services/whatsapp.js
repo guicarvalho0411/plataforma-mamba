@@ -70,6 +70,15 @@ const client = new Client({
       '--no-first-run',
       '--no-zygote',
       '--disable-gpu',
+      '--disable-background-networking',
+      '--disable-background-timer-throttling',
+      '--disable-default-apps',
+      '--disable-extensions',
+      '--disable-sync',
+      '--disable-translate',
+      '--metrics-recording-only',
+      '--no-default-browser-check',
+      '--safebrowsing-disable-auto-update',
     ],
   },
 });
@@ -88,37 +97,43 @@ client.on('ready', () => {
 });
 
 client.on('auth_failure', () => {
-  console.error('[WhatsApp] Falha na autenticação.');
+  console.error('[WhatsApp] Falha na autenticação — reiniciando processo...');
+  setTimeout(() => process.exit(1), 1000);
 });
 
 client.on('remote_session_saved', () => {
   console.log('[WhatsApp] Sessão sincronizada com o banco.');
 });
 
-client.on('disconnected', async (reason) => {
+client.on('disconnected', (reason) => {
   isReady = false;
-  console.warn('[WhatsApp] Desconectado:', reason);
-
-  if (reason === 'LOGOUT' || reason === 'CONFLICT') {
-    console.warn('[WhatsApp] Reconexão abortada (motivo:', reason, '). Reinicie o serviço manualmente.');
-    return;
-  }
-
-  setTimeout(async () => {
-    console.log('[WhatsApp] Tentando reconectar...');
-    try { await client.destroy(); } catch (err) {
-      console.warn('[WhatsApp] Erro ao destruir client:', err.message);
-    }
-    client.initialize().catch(err => console.error('[WhatsApp] Erro ao reinicializar:', err.message));
-  }, 5000);
+  console.warn('[WhatsApp] Desconectado:', reason, '— reiniciando processo para reconexão limpa...');
+  setTimeout(() => process.exit(1), 1000);
 });
 
-client.initialize().catch(err => console.error('[WhatsApp] Erro ao inicializar:', err.message));
+// Keepalive: evita timeout por inatividade no WhatsApp Web
+setInterval(async () => {
+  if (!isReady) return;
+  try {
+    await client.getState();
+  } catch (err) {
+    console.warn('[WhatsApp] Keepalive falhou:', err.message);
+  }
+}, 30000);
+
+client.initialize().catch(err => {
+  console.error('[WhatsApp] Erro ao inicializar:', err.message);
+  setTimeout(() => process.exit(1), 1000);
+});
 
 // ─── Funções exportadas ────────────────────────────────────────
 async function notificarGrupoLimpeza(mensagem) {
   if (!GRUPO_LIMPEZA) {
     console.log('[WhatsApp] WHATSAPP_GRUPO_LIMPEZA não configurado:', mensagem);
+    return;
+  }
+  if (!isReady) {
+    console.warn('[WhatsApp] Cliente não está pronto, mensagem descartada.');
     return;
   }
   try {
