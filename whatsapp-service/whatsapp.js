@@ -124,7 +124,8 @@ client.on('disconnected', async (reason) => {
   }, 5000);
 });
 
-client.initialize();
+// Serviço desativado — WhatsApp consolidado no backend principal
+// client.initialize();
 
 async function notificarGrupoLimpeza(mensagem) {
   if (!GRUPO_LIMPEZA) {
