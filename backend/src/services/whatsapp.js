@@ -3,7 +3,6 @@ const qrcode = require('qrcode-terminal');
 const QRCode = require('qrcode');
 const AdmZip = require('adm-zip');
 const fs = require('fs');
-const path = require('path');
 const pool = require('../db');
 
 const GRUPO_LIMPEZA = process.env.WHATSAPP_GRUPO_LIMPEZA || '';
@@ -11,6 +10,9 @@ const SESSION_NAME = 'mamba-session';
 
 let qrCodeData = null;
 let isReady = false;
+let client = null;
+let reconnectTimer = null;
+let reconnectAttempts = 0;
 
 // ─── Store PostgreSQL para RemoteAuth ─────────────────────────
 class PgStore {
@@ -53,67 +55,97 @@ class PgStore {
   }
 }
 
-// ─── Cliente WhatsApp ──────────────────────────────────────────
-const client = new Client({
-  authStrategy: new RemoteAuth({
-    store: new PgStore(),
-    session: SESSION_NAME,
-    backupSyncIntervalMs: 60000,
-  }),
-  puppeteer: {
-    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--no-first-run',
-      '--no-zygote',
-      '--disable-gpu',
-      '--disable-background-networking',
-      '--disable-background-timer-throttling',
-      '--disable-default-apps',
-      '--disable-extensions',
-      '--disable-sync',
-      '--disable-translate',
-      '--metrics-recording-only',
-      '--no-default-browser-check',
-      '--safebrowsing-disable-auto-update',
-    ],
-  },
-});
+const PUPPETEER_ARGS = [
+  '--no-sandbox',
+  '--disable-setuid-sandbox',
+  '--disable-dev-shm-usage',
+  '--disable-accelerated-2d-canvas',
+  '--no-first-run',
+  '--no-zygote',
+  '--disable-gpu',
+  '--disable-background-networking',
+  '--disable-background-timer-throttling',
+  '--disable-default-apps',
+  '--disable-extensions',
+  '--disable-sync',
+  '--disable-translate',
+  '--metrics-recording-only',
+  '--no-default-browser-check',
+  '--safebrowsing-disable-auto-update',
+];
 
-client.on('qr', (qr) => {
-  qrCodeData = qr;
-  isReady = false;
-  console.log('\n[WhatsApp] QR Code gerado. Acesse /whatsapp/qrcode no navegador.\n');
-  qrcode.generate(qr, { small: true });
-});
+// ─── Reconexão com backoff exponencial ────────────────────────
+function scheduleReconnect() {
+  if (reconnectTimer) return;
+  reconnectAttempts++;
+  const delay = Math.min(5000 * Math.pow(2, reconnectAttempts - 1), 60000);
+  console.log(`[WhatsApp] Reconectando em ${delay / 1000}s (tentativa ${reconnectAttempts})...`);
+  reconnectTimer = setTimeout(async () => {
+    reconnectTimer = null;
+    if (client) {
+      try { await client.destroy(); } catch {}
+    }
+    initClient();
+  }, delay);
+}
 
-client.on('ready', () => {
-  qrCodeData = null;
-  isReady = true;
-  console.log('[WhatsApp] Conectado com sucesso!');
-});
+// ─── Cria nova instância do client ────────────────────────────
+function initClient() {
+  client = new Client({
+    authStrategy: new RemoteAuth({
+      store: new PgStore(),
+      session: SESSION_NAME,
+      backupSyncIntervalMs: 60000,
+    }),
+    puppeteer: {
+      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
+      args: PUPPETEER_ARGS,
+    },
+  });
 
-client.on('auth_failure', () => {
-  console.error('[WhatsApp] Falha na autenticação — reiniciando processo...');
-  setTimeout(() => process.exit(1), 1000);
-});
+  client.on('qr', (qr) => {
+    qrCodeData = qr;
+    isReady = false;
+    console.log('\n[WhatsApp] QR Code gerado. Acesse /whatsapp/qrcode no navegador.\n');
+    qrcode.generate(qr, { small: true });
+  });
 
-client.on('remote_session_saved', () => {
-  console.log('[WhatsApp] Sessão sincronizada com o banco.');
-});
+  client.on('ready', () => {
+    qrCodeData = null;
+    isReady = true;
+    reconnectAttempts = 0;
+    console.log('[WhatsApp] Conectado com sucesso!');
+  });
 
-client.on('disconnected', (reason) => {
-  isReady = false;
-  console.warn('[WhatsApp] Desconectado:', reason, '— reiniciando processo para reconexão limpa...');
-  setTimeout(() => process.exit(1), 1000);
-});
+  client.on('auth_failure', () => {
+    isReady = false;
+    console.error('[WhatsApp] Falha na autenticação.');
+    scheduleReconnect();
+  });
+
+  client.on('remote_session_saved', () => {
+    console.log('[WhatsApp] Sessão sincronizada com o banco.');
+  });
+
+  client.on('disconnected', (reason) => {
+    isReady = false;
+    console.warn('[WhatsApp] Desconectado:', reason);
+    if (reason === 'LOGOUT') {
+      console.warn('[WhatsApp] Logout detectado — reconexão manual necessária.');
+      return;
+    }
+    scheduleReconnect();
+  });
+
+  client.initialize().catch(err => {
+    console.error('[WhatsApp] Erro ao inicializar:', err.message);
+    scheduleReconnect();
+  });
+}
 
 // Keepalive: evita timeout por inatividade no WhatsApp Web
 setInterval(async () => {
-  if (!isReady) return;
+  if (!isReady || !client) return;
   try {
     await client.getState();
   } catch (err) {
@@ -121,10 +153,7 @@ setInterval(async () => {
   }
 }, 30000);
 
-client.initialize().catch(err => {
-  console.error('[WhatsApp] Erro ao inicializar:', err.message);
-  setTimeout(() => process.exit(1), 1000);
-});
+initClient();
 
 // ─── Funções exportadas ────────────────────────────────────────
 async function notificarGrupoLimpeza(mensagem) {
